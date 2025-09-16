@@ -1,0 +1,17 @@
+
+services:
+  app:
+    build: .
+    hostname: nginx-rtmp
+    restart: unless-stopped
+    # network_mode: host
+    ports:
+      - 1936:1935
+      - 8036:80
+    volumes:
+      - ./conf/template:/etc/nginx/nginx.conf.template:rw
+      - ./data:/opt/data
+      - ./www:/www/static
+    environment:
+      - TZ=America/Maceio
+

@@ -1,0 +1,102 @@
+## Comandos de Publicação (todas as opções):
+
+# Opção 1 - Stream (recomendado)
+ffmpeg -re -stream_loop -1 -i input.mp4 \
+  -c:v libx264 -preset veryfast -tune zerolatency \
+  -g 60 -r 30 -b:v 2500k \
+  -c:a aac -b:a 128k -f flv \
+  rtmp://192.168.0.115:1936/stream/admin_prompt1_abc
+
+# Opção 2 - Live
+ffmpeg -re -stream_loop -1 -i input.mp4 \
+  -c:v libx264 -preset veryfast -tune zerolatency \
+  -g 60 -r 30 -b:v 2500k \
+  -c:a aac -b:a 128k -f flv \
+  rtmp://192.168.0.115:1935/live/admin_prompt_abc1
+
+# Opção 3 - Raw (sem processamento)
+ffmpeg -re -stream_loop -1 -i input.mp4 \
+  -c copy -f flv \
+  rtmp://192.168.0.115:1935/raw/admin_prompt_abc1
+
+
+# Opção 4 - Hls
+Comandos de Publicação Direta para HLS:
+1. Publicação direta com transcodificação simples:
+ffmpeg -re -stream_loop -1 -i input.mp4 \
+  -c:v libx264 -preset veryfast -tune zerolatency \
+  -b:v 2500k -maxrate 2500k -bufsize 5000k \
+  -c:a aac -b:a 128k -f flv \
+  rtmp://192.168.0.115:1935/hls/admin_prompt_abc1
+
+2. Publicação direta com múltiplas qualidades (ABR):
+ffmpeg -re -stream_loop -1 -i input.mp4 \
+  -filter_complex \
+    "[0:v]split=4[v1][v2][v3][v4];
+     [v1]scale=1280:720[vout1];
+     [v2]scale=854:480[vout2];
+     [v3]scale=640:360[vout3];
+     [v4]scale=426:240[vout4]" \
+  -map "[vout1]" -c:v:0 libx264 -preset veryfast -b:v:0 2500k -maxrate:0 2500k -bufsize:0 5000k \
+  -map "[vout2]" -c:v:1 libx264 -preset veryfast -b:v:1 1000k -maxrate:1 1000k -bufsize:1 2000k \
+  -map "[vout3]" -c:v:2 libx264 -preset veryfast -b:v:2 750k -maxrate:2 750k -bufsize:2 1500k \
+  -map "[vout4]" -c:v:3 libx264 -preset veryfast -b:v:3 400k -maxrate:3 400k -bufsize:3 800k \
+  -map 0:a -c:a aac -b:a 128k -ac 2 \
+  -f flv rtmp://192.168.0.115:1935/hls/admin_prompt_abc1
+
+3. Publicação direta copiando o stream (sem transcodificação):
+ffmpeg -re -stream_loop -1 -i input.mp4 \
+  -c copy -f flv \
+  rtmp://192.168.0.115:1935/hls/admin_prompt_abc1
+
+4. Publicação com metadados específicos para HLS:
+ffmpeg -re -stream_loop -1 -i input.mp4 \
+  -c:v libx264 -preset veryfast -tune zerolatency \
+  -g 60 -keyint_min 60 -sc_threshold 0 \
+  -b:v 2500k -maxrate 2500k -bufsize 5000k \
+  -c:a aac -b:a 128k -ar 44100 \
+  -f flv -flvflags no_duration_filesize \
+  rtmp://192.168.0.115:1935/hls/admin_prompt_abc1
+
+5. Publicação para qualidade específica:
+# Para 720p
+ffmpeg -re -stream_loop -1 -i input.mp4 \
+  -vf "scale=1280:720" -c:v libx264 -preset veryfast -b:v 2500k \
+  -c:a aac -b:a 128k -f flv \
+  rtmp://192.168.0.115:1935/hls/admin_prompt_abc1_720p2628kbs
+
+# Para 480p
+ffmpeg -re -stream_loop -1 -i input.mp4 \
+  -vf "scale=854:480" -c:v libx264 -preset veryfast -b:v 1000k \
+  -c:a aac -b:a 128k -f flv \
+  rtmp://192.168.0.115:1935/hls/admin_prompt_abc1_480p1128kbs
+
+
+
+## URLs para Visualização:  
+
+RTMP:
+rtmp://192.168.0.115:1935/stream/admin_prompt_abc1
+rtmp://192.168.0.115:1935/live/admin_prompt_abc1
+rtmp://192.168.0.115:1935/raw/admin_prompt_abc1
+
+HLS:
+Playlist mestre: http://192.168.0.115/hls/admin_prompt_abc1.m3u8
+                 http://192.168.0.115/live/admin_prompt_abc1.m3u8
+720p: http://192.168.0.115/hls/admin_prompt_abc1_720p2628kbs.m3u8
+480p: http://192.168.0.115/hls/admin_prompt_abc1_480p1128kbs.m3u8
+360p: http://192.168.0.115/hls/admin_prompt_abc1_360p878kbs.m3u8
+240p: http://192.168.0.115/hls/admin_prompt_abc1_240p264kbs.m3u8
+
+
+Status:
+
+http://192.168.0.115:8036/stat
+
+http://192.168.0.115/
+
+Debug:
+
+http://192.168.0.115/debug
+
+
